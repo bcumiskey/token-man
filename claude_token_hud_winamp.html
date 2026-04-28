@@ -1,0 +1,293 @@
+<style>
+  .wa { width: 600px; margin: 0 auto; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--color-text-primary); overflow: hidden; }
+  .wa-title { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: var(--color-background-tertiary); border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 9px; letter-spacing: 1px; color: var(--color-text-secondary); text-transform: uppercase; }
+  .wa-title-right { display: flex; gap: 6px; align-items: center; }
+  .wa-btn-small { width: 12px; height: 12px; border: 0.5px solid var(--color-border-tertiary); border-radius: 2px; background: var(--color-background-primary); font-size: 8px; line-height: 10px; text-align: center; color: var(--color-text-secondary); cursor: pointer; padding: 0; font-family: var(--font-mono); }
+  .wa-main { display: grid; grid-template-columns: 58px 1fr 120px; gap: 0; padding: 8px; background: var(--color-background-primary); }
+  .wa-mascot { width: 58px; height: 72px; background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: 3px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .wa-mascot-label { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 7px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wa-center { padding: 0 10px; }
+  .wa-readout { display: flex; gap: 12px; align-items: baseline; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .wa-big { font-size: 20px; font-weight: 500; letter-spacing: 0.5px; color: var(--color-text-primary); }
+  .wa-big-label { font-size: 8px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+  .wa-sub { font-size: 10px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+  .wa-viz { height: 36px; background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: 2px; display: flex; align-items: flex-end; padding: 2px; gap: 1px; }
+  .wa-bar { flex: 1; background: #378ADD; min-height: 1px; transition: height 0.15s linear; }
+  .wa-right { display: flex; flex-direction: column; gap: 3px; }
+  .wa-meter { display: flex; align-items: center; gap: 4px; font-size: 9px; font-variant-numeric: tabular-nums; }
+  .wa-meter-label { width: 36px; font-size: 8px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wa-meter-bar { flex: 1; height: 8px; background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: 1px; position: relative; overflow: hidden; }
+  .wa-meter-fill { height: 100%; background: #1D9E75; transition: width 0.3s, background 0.3s; }
+  .wa-meter-val { width: 28px; text-align: right; font-size: 9px; color: var(--color-text-primary); }
+  .wa-sessions { border-top: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
+  .wa-sessions-head { display: grid; grid-template-columns: 14px 70px 60px 1fr 40px 40px 44px; gap: 4px; padding: 4px 8px; font-size: 8px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .wa-sess-row { display: grid; grid-template-columns: 14px 70px 60px 1fr 40px 40px 44px; gap: 4px; padding: 4px 8px; font-size: 9px; font-variant-numeric: tabular-nums; align-items: center; border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; }
+  .wa-sess-row:hover { background: var(--color-background-tertiary); }
+  .wa-sess-row.selected { background: var(--color-background-info); }
+  .wa-sess-row:last-child { border-bottom: none; }
+  .wa-sess-dot { width: 6px; height: 6px; border-radius: 50%; background: #1D9E75; }
+  .wa-sess-dot.warn { background: #EF9F27; }
+  .wa-sess-dot.danger { background: #E24B4A; }
+  .wa-sess-dot.idle { background: #888780; }
+  .wa-sess-dot.opaque { background: #888780; opacity: 0.4; border: 0.5px solid #5F5E5A; }
+  .wa-sess-src { color: var(--color-text-secondary); font-size: 8px; text-transform: uppercase; }
+  .wa-sess-name { color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wa-minibar { height: 4px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 1px; overflow: hidden; }
+  .wa-minibar-fill { height: 100%; background: #378ADD; }
+  .wa-footer { display: flex; justify-content: space-between; padding: 4px 8px; background: var(--color-background-tertiary); border-top: 0.5px solid var(--color-border-tertiary); font-size: 8px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wa-footer-ctrls { display: flex; gap: 6px; }
+  .wa-footer-btn { font-size: 8px; padding: 1px 6px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); color: var(--color-text-secondary); border-radius: 2px; cursor: pointer; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wa-footer-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+</style>
+<h2 class="sr-only">Winamp-style heads-up display prototype showing aggregated Claude token usage across multiple sessions, with a small mascot figure in the corner that reacts to overall state.</h2>
+
+<div class="wa">
+  <div class="wa-title">
+    <span>claude.hud — 0.1</span>
+    <div class="wa-title-right">
+      <span id="wa-globalstate">ok</span>
+      <button class="wa-btn-small" title="minimize">_</button>
+      <button class="wa-btn-small" title="close">×</button>
+    </div>
+  </div>
+
+  <div class="wa-main">
+    <div class="wa-mascot">
+      <svg id="mascot" width="44" height="56" viewBox="0 0 44 56" role="img" aria-label="Small shaman figure reacting to session state">
+        <title>Shaman mascot</title>
+        <desc>Small silhouette figure that changes pose based on aggregate session state.</desc>
+        <g id="m-fig" transform="translate(22 28)">
+          <path id="m-plume" d="M -4 -20 L 0 -26 L 4 -20" fill="none" stroke="#993C1D" stroke-width="1.5" stroke-linecap="round"/>
+          <circle id="m-head" cx="0" cy="-14" r="5" fill="#2C2C2A"/>
+          <path id="m-body" d="M -5 -9 L 5 -9 L 6 10 L -6 10 Z" fill="#2C2C2A"/>
+          <g id="m-armL"><line x1="-5" y1="-7" x2="-11" y2="2" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/></g>
+          <g id="m-armR"><line x1="5" y1="-7" x2="11" y2="2" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/></g>
+          <g id="m-legL"><line x1="-3" y1="10" x2="-5" y2="22" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/></g>
+          <g id="m-legR"><line x1="3" y1="10" x2="5" y2="22" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/></g>
+        </g>
+      </svg>
+      <div class="wa-mascot-label" id="m-label">idle</div>
+    </div>
+
+    <div class="wa-center">
+      <div class="wa-readout">
+        <div><span class="wa-big-label">tok/min</span> <span class="wa-big" id="tpm">0</span></div>
+        <div class="wa-sub">•</div>
+        <div><span class="wa-big-label">sess</span> <span class="wa-sub" id="sessCount">3 active</span></div>
+        <div class="wa-sub">•</div>
+        <div><span class="wa-big-label">cost</span> <span class="wa-sub" id="costToday">$2.84 today</span></div>
+      </div>
+      <div class="wa-viz" id="viz"></div>
+    </div>
+
+    <div class="wa-right">
+      <div class="wa-meter">
+        <span class="wa-meter-label">ctx</span>
+        <div class="wa-meter-bar"><div class="wa-meter-fill" id="m-ctx" style="width:42%"></div></div>
+        <span class="wa-meter-val" id="v-ctx">42%</span>
+      </div>
+      <div class="wa-meter">
+        <span class="wa-meter-label">5hr</span>
+        <div class="wa-meter-bar"><div class="wa-meter-fill" id="m-win" style="width:38%"></div></div>
+        <span class="wa-meter-val" id="v-win">38%</span>
+      </div>
+      <div class="wa-meter">
+        <span class="wa-meter-label">cache</span>
+        <div class="wa-meter-bar"><div class="wa-meter-fill" id="m-cache" style="width:94%; background:#1D9E75"></div></div>
+        <span class="wa-meter-val" id="v-cache">94%</span>
+      </div>
+      <div class="wa-meter">
+        <span class="wa-meter-label">week</span>
+        <div class="wa-meter-bar"><div class="wa-meter-fill" id="m-week" style="width:21%; background:#378ADD"></div></div>
+        <span class="wa-meter-val" id="v-week">21%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wa-sessions">
+    <div class="wa-sessions-head">
+      <span></span><span>source</span><span>model</span><span>project</span><span>ctx</span><span>t/m</span><span>cost</span>
+    </div>
+    <div class="wa-sess-row selected" data-sid="0">
+      <span class="wa-sess-dot warn"></span>
+      <span class="wa-sess-src">code #1</span>
+      <span class="wa-sess-src">sonnet-4.6</span>
+      <span class="wa-sess-name">framework-build</span>
+      <span>72%</span>
+      <span>3.1k</span>
+      <span>$1.42</span>
+    </div>
+    <div class="wa-sess-row" data-sid="1">
+      <span class="wa-sess-dot"></span>
+      <span class="wa-sess-src">code #2</span>
+      <span class="wa-sess-src">haiku-4.5</span>
+      <span class="wa-sess-name">refactor-auth</span>
+      <span>28%</span>
+      <span>0.9k</span>
+      <span>$0.18</span>
+    </div>
+    <div class="wa-sess-row" data-sid="2">
+      <span class="wa-sess-dot idle"></span>
+      <span class="wa-sess-src">dispatch</span>
+      <span class="wa-sess-src">sonnet-4.6</span>
+      <span class="wa-sess-name">pr-review-#482</span>
+      <span>—</span>
+      <span>idle</span>
+      <span>$0.31</span>
+    </div>
+    <div class="wa-sess-row" data-sid="3">
+      <span class="wa-sess-dot opaque"></span>
+      <span class="wa-sess-src">chrome</span>
+      <span class="wa-sess-src">haiku-4.5</span>
+      <span class="wa-sess-name">opaque (plan agg only)</span>
+      <span>—</span>
+      <span>—</span>
+      <span>$0.52</span>
+    </div>
+    <div class="wa-sess-row" data-sid="4">
+      <span class="wa-sess-dot opaque"></span>
+      <span class="wa-sess-src">cowork</span>
+      <span class="wa-sess-src">sonnet-4.6</span>
+      <span class="wa-sess-name">opaque (plan agg only)</span>
+      <span>—</span>
+      <span>—</span>
+      <span>$0.41</span>
+    </div>
+  </div>
+
+  <div class="wa-footer">
+    <span>aggregating 5 sources • 3 live</span>
+    <div class="wa-footer-ctrls">
+      <button class="wa-footer-btn active" data-state="mixed">mixed</button>
+      <button class="wa-footer-btn" data-state="calm">calm</button>
+      <button class="wa-footer-btn" data-state="busy">busy</button>
+      <button class="wa-footer-btn" data-state="hot">hot</button>
+      <button class="wa-footer-btn" data-state="alert">alert</button>
+      <button class="wa-footer-btn" data-state="win">win</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var viz = document.getElementById('viz');
+  var bars = [];
+  for (var i = 0; i < 40; i++) {
+    var b = document.createElement('div');
+    b.className = 'wa-bar';
+    b.style.height = '2px';
+    viz.appendChild(b);
+    bars.push(b);
+  }
+
+  var mFig = document.getElementById('m-fig');
+  var mArmL = document.getElementById('m-armL');
+  var mArmR = document.getElementById('m-armR');
+  var mLegL = document.getElementById('m-legL');
+  var mLegR = document.getElementById('m-legR');
+  var mHead = document.getElementById('m-head');
+  var mLabel = document.getElementById('m-label');
+  var globalState = document.getElementById('wa-globalstate');
+
+  function rot(el, deg, ox, oy) { el.setAttribute('transform', 'rotate(' + deg + ' ' + ox + ' ' + oy + ')'); }
+
+  var state = 'mixed';
+  var t = 0;
+
+  function mascotPose() {
+    t += 0.08;
+    var s = Math.sin(t);
+    var c = Math.cos(t);
+    if (state === 'calm') {
+      rot(mFig, s * 1.5, 22, 28);
+      rot(mArmL, 0, -5, -7); rot(mArmR, 0, 5, -7);
+      rot(mLegL, 0, -3, 10); rot(mLegR, 0, 3, 10);
+      rot(mHead, s * 2, 0, -14);
+    } else if (state === 'busy' || state === 'mixed') {
+      rot(mFig, s * 3, 22, 28);
+      rot(mArmL, -15 + s * 10, -5, -7);
+      rot(mArmR, 15 - s * 10, 5, -7);
+      rot(mLegL, c * 5, -3, 10); rot(mLegR, -c * 5, 3, 10);
+      rot(mHead, s * 3, 0, -14);
+    } else if (state === 'hot') {
+      rot(mFig, s * 5, 22, 28);
+      rot(mArmL, -45 + s * 20, -5, -7);
+      rot(mArmR, 45 - s * 20, 5, -7);
+      rot(mLegL, c * 10, -3, 10); rot(mLegR, -c * 10, 3, 10);
+      rot(mHead, s * 5, 0, -14);
+    } else if (state === 'alert') {
+      rot(mFig, 0, 22, 28);
+      rot(mArmL, -30, -5, -7);
+      rot(mArmR, -90 + s * 6, 5, -7);
+      rot(mLegL, -8, -3, 10); rot(mLegR, 12, 3, 10);
+      rot(mHead, 0, 0, -14);
+    } else if (state === 'win') {
+      rot(mFig, s * 3, 22, 28);
+      rot(mArmL, -100 + Math.sin(t * 4) * 15, -5, -7);
+      rot(mArmR, 100 - Math.sin(t * 4) * 15, 5, -7);
+      rot(mLegL, Math.sin(t * 5) * 15, -3, 10);
+      rot(mLegR, -Math.sin(t * 5) * 15, 3, 10);
+      rot(mHead, Math.sin(t * 3) * 8, 0, -14);
+    }
+    requestAnimationFrame(mascotPose);
+  }
+  mascotPose();
+
+  function barColor(s) {
+    if (s === 'hot' || s === 'alert') return '#EF9F27';
+    if (s === 'win') return '#1D9E75';
+    return '#378ADD';
+  }
+
+  function tick() {
+    var intensity = state === 'calm' ? 0.15 : state === 'busy' ? 0.55 : state === 'hot' ? 0.85 : state === 'alert' ? 0.7 : state === 'win' ? 0.35 : 0.5;
+    var col = barColor(state);
+    for (var i = 0; i < bars.length; i++) {
+      var h = Math.max(1, (Math.random() * 0.6 + 0.4) * intensity * 32);
+      bars[i].style.height = h.toFixed(1) + 'px';
+      bars[i].style.background = col;
+    }
+    var tpm = Math.round(intensity * 4200 + Math.random() * 400);
+    document.getElementById('tpm').textContent = tpm.toLocaleString();
+    var ctx = state === 'calm' ? 18 : state === 'busy' ? 48 : state === 'hot' ? 82 : state === 'alert' ? 94 : state === 'win' ? 22 : 42;
+    var win = state === 'alert' ? 87 : state === 'hot' ? 64 : state === 'win' ? 40 : state === 'calm' ? 22 : state === 'busy' ? 45 : 38;
+    var cache = state === 'hot' ? 78 : state === 'alert' ? 68 : 94;
+    var week = state === 'alert' ? 52 : state === 'hot' ? 34 : 21;
+    document.getElementById('m-ctx').style.width = ctx + '%';
+    document.getElementById('v-ctx').textContent = ctx + '%';
+    document.getElementById('m-ctx').style.background = ctx > 80 ? '#E24B4A' : ctx > 60 ? '#EF9F27' : '#1D9E75';
+    document.getElementById('m-win').style.width = win + '%';
+    document.getElementById('v-win').textContent = win + '%';
+    document.getElementById('m-win').style.background = win > 80 ? '#E24B4A' : win > 60 ? '#EF9F27' : '#1D9E75';
+    document.getElementById('m-cache').style.width = cache + '%';
+    document.getElementById('v-cache').textContent = cache + '%';
+    document.getElementById('m-week').style.width = week + '%';
+    document.getElementById('v-week').textContent = week + '%';
+    var costs = { calm: '$0.84', busy: '$2.12', hot: '$4.28', alert: '$5.91', win: '$1.88', mixed: '$2.84' };
+    document.getElementById('costToday').textContent = costs[state] + ' today';
+    var gs = { calm: 'ok', busy: 'busy', hot: 'heavy', alert: 'alert', win: 'done', mixed: 'mixed' };
+    globalState.textContent = gs[state];
+    mLabel.textContent = gs[state];
+  }
+  setInterval(tick, 180);
+  tick();
+
+  var btns = document.querySelectorAll('.wa-footer-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function(e){
+      state = e.target.getAttribute('data-state');
+      var allBtns = document.querySelectorAll('.wa-footer-btn');
+      for (var j = 0; j < allBtns.length; j++) allBtns[j].classList.toggle('active', allBtns[j] === e.target);
+    });
+  }
+
+  var rows = document.querySelectorAll('.wa-sess-row');
+  for (var i = 0; i < rows.length; i++) {
+    rows[i].addEventListener('click', function(e){
+      var all = document.querySelectorAll('.wa-sess-row');
+      for (var j = 0; j < all.length; j++) all[j].classList.remove('selected');
+      e.currentTarget.classList.add('selected');
+    });
+  }
+})();
+</script>

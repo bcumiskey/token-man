@@ -1,0 +1,33 @@
+# Rust / Tauri build artifacts
+app/src-tauri/target/
+app/src-tauri/gen/schemas/
+**/target/
+**/*.rs.bk
+
+# Node
+node_modules/
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Local state / secrets
+.env
+.env.*
+*.key
+*.pem
+config.local.toml
+
+# Diagnostic logs (may contain local user paths)
+tokenman-diag.log
+*.log
+
+# Large bundled artifacts not needed in source
+TOKEN-MAN__A_Pitch.mp4
+token-man-v1.0-for-max.zip
+token-man-bible.md.pdf
+.claude/

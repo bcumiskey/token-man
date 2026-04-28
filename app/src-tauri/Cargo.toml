@@ -1,0 +1,65 @@
+[package]
+name = "token-man"
+version = "1.0.0"
+description = "Token-Man — Winamp-inspired HUD for Claude token usage"
+authors = ["Token-Man contributors"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "token_man_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "protocol-asset"] }
+tauri-plugin-autostart = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-window-state = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+async-trait = "0.1"
+
+rusqlite = { version = "0.31", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+
+notify = "6"
+notify-debouncer-full = "0.3"
+
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+keyring = "2"
+dirs = "5"
+anyhow = "1"
+thiserror = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+rodio = { version = "0.19", default-features = false, features = ["wav"] }
+
+# OTel receiver (minimal HTTP/protobuf — stub in v1.0)
+axum = { version = "0.7", default-features = false, features = ["http1", "tokio", "json"] }
+tower = "0.5"
+hyper = "1"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

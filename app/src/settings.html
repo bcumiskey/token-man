@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Token-Man — Settings</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { background: var(--wa-bg); color: var(--wa-text); padding: 16px; font-family: var(--font-sans); font-size: 12px; overflow: auto; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--wa-chrome); margin-bottom: 16px; }
+  .tab { padding: 6px 12px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--wa-text-dim); cursor: pointer; border: 1px solid transparent; border-bottom: none; }
+  .tab.on { color: var(--wa-lcd); border-color: var(--wa-chrome); background: var(--wa-panel); }
+  .panel { display: none; }
+  .panel.on { display: block; }
+  label { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  label span:first-child { width: 180px; color: var(--wa-text-dim); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select { background: #0A0A09; border: 1px solid var(--wa-chrome); color: var(--wa-text); padding: 3px 6px; font-family: var(--font-mono); font-size: 11px; }
+  input[type=checkbox] { width: auto; }
+  input[type=range] { flex: 1; }
+  button { font-family: var(--font-mono); font-size: 10px; padding: 4px 10px; background: var(--wa-panel); border: 1px solid var(--wa-lcd-dim); color: var(--wa-lcd); cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+  button:hover { border-color: var(--wa-lcd); }
+  .profile-row { border: 1px solid var(--wa-chrome); padding: 8px; margin-bottom: 6px; }
+  .footer { margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px; }
+  h2 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--wa-text-dim); margin: 0 0 8px 0; }
+</style>
+</head>
+<body>
+<div class="tabs">
+  <div class="tab on" data-tab="general">General</div>
+  <div class="tab" data-tab="profiles">Profiles</div>
+  <div class="tab" data-tab="thresholds">Thresholds</div>
+  <div class="tab" data-tab="notifications">Notifications</div>
+  <div class="tab" data-tab="sources">Sources</div>
+  <div class="tab" data-tab="about">About</div>
+</div>
+
+<div class="panel on" data-panel="general">
+  <h2>General</h2>
+  <label><span>Render interval (ms)</span><input type="number" id="render_interval_ms" min="100" max="2000" step="100"></label>
+  <label><span>Admin poll interval (s)</span><input type="number" id="admin_poll_interval_s" min="30" max="600"></label>
+  <label><span>Minimize to tray</span><input type="checkbox" id="minimize_to_tray"></label>
+  <label><span>Autostart at login</span><input type="checkbox" id="autostart"></label>
+  <label><span>Always on top (default)</span><input type="checkbox" id="always_on_top_default"></label>
+  <label><span>Jingle on launch</span><input type="checkbox" id="jingle_on_launch"></label>
+</div>
+
+<div class="panel" data-panel="profiles">
+  <h2>Profiles</h2>
+  <div id="profilesList"></div>
+  <button id="addProfile">+ Add profile</button>
+</div>
+
+<div class="panel" data-panel="thresholds">
+  <h2>Thresholds</h2>
+  <label><span>Context warn %</span><input type="number" id="ctx_warn" min="0" max="100" step="5"></label>
+  <label><span>Context critical %</span><input type="number" id="ctx_critical" min="0" max="100" step="5"></label>
+  <label><span>5-hour warn %</span><input type="number" id="five_hour_warn" min="0" max="100" step="5"></label>
+  <label><span>5-hour critical %</span><input type="number" id="five_hour_critical" min="0" max="100" step="5"></label>
+  <label><span>Cache warn % (below)</span><input type="number" id="cache_warn" min="0" max="100" step="5"></label>
+  <label><span>Cache critical % (below)</span><input type="number" id="cache_critical" min="0" max="100" step="5"></label>
+  <label><span>Burn warn $/hr</span><input type="number" id="burn_warn" min="0" max="20" step="0.5"></label>
+  <label><span>Burn critical $/hr</span><input type="number" id="burn_critical" min="0" max="20" step="0.5"></label>
+  <label><span>ETA warn (min)</span><input type="number" id="eta_warn_min" min="0" max="600"></label>
+  <label><span>ETA critical (min)</span><input type="number" id="eta_critical_min" min="0" max="600"></label>
+</div>
+
+<div class="panel" data-panel="notifications">
+  <h2>Notifications</h2>
+  <label><span>Sound</span><input type="checkbox" id="notification_sound"></label>
+  <label><span>Toasts</span><input type="checkbox" id="notification_toasts"></label>
+  <label><span>Red mode</span><input type="checkbox" id="red_mode_enabled"></label>
+  <div style="margin-top:12px"><button id="testAlert">Fire test alert</button></div>
+</div>
+
+<div class="panel" data-panel="sources">
+  <h2>Sources</h2>
+  <label><span>OTel port</span><input type="number" id="otel_port" min="1024" max="65535"></label>
+  <label><span>Admin API endpoint</span><input type="text" id="admin_api_endpoint" style="width: 320px"></label>
+  <p style="color:var(--wa-text-dim);font-family:var(--font-mono);font-size:10px">
+    Set <code>CLAUDE_CODE_TELEMETRY_ENDPOINT=http://127.0.0.1:&lt;otel_port&gt;</code> in your Claude Code environment to stream OTel to Token-Man.
+  </p>
+</div>
+
+<div class="panel" data-panel="about">
+  <h2>About</h2>
+  <p><strong>Token-Man v1.0</strong> — it really whips the token's ass.</p>
+  <p style="color:var(--wa-text-dim);font-family:var(--font-mono);font-size:10px">Built from PHASE-2-SPEC.md.</p>
+  <p><button id="checkUpdate">Refresh model registry</button></p>
+</div>
+
+<div class="footer">
+  <button id="saveBtn">Save</button>
+  <button id="cancelBtn">Close</button>
+</div>
+
+<script src="settings.js"></script>
+</body>
+</html>

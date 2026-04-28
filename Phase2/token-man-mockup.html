@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Token-Man — design mockup</title>
+<meta name="description" content="Token-Man: a Winamp-inspired heads-up display for Claude token usage monitoring. It really whips the token's ass.">
+<style>
+  :root {
+    --wa-bg: #0F0F0E; --wa-panel: #1A1A18; --wa-chrome: #2C2C2A; --wa-chrome-hi: #3A3A37; --wa-chrome-lo: #0A0A09;
+    --wa-text: #D3D1C7; --wa-text-dim: #888780;
+    --wa-lcd: #5DCAA5; --wa-lcd-dim: #2F6A55; --wa-lcd-deep: #081510;
+    --wa-amber: #EF9F27; --wa-red: #E24B4A; --wa-blue: #85B7EB;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  html, body { margin: 0; padding: 0; background: #1a1a1a; color: #D3D1C7; font-family: var(--font-sans); min-height: 100vh; }
+  .page { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+  h1 { font-family: var(--font-mono); font-size: 14px; color: #D3D1C7; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 6px 0; font-weight: 400; }
+  .tagline { font-family: var(--font-mono); font-size: 10px; color: #888780; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .jingle-hint { font-family: var(--font-mono); font-size: 10px; color: var(--wa-lcd-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 28px; cursor: pointer; }
+  .jingle-hint.played { color: var(--wa-text-dim); }
+  .section { margin-bottom: 28px; }
+  .section-lbl { font-family: var(--font-mono); font-size: 10px; color: #888780; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .notes { background: #222; border: 1px solid #333; border-radius: 3px; padding: 14px 18px; margin-top: 28px; font-family: var(--font-sans); font-size: 13px; line-height: 1.55; color: #B8B6AD; }
+  .notes h2 { font-family: var(--font-mono); font-size: 11px; color: #D3D1C7; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px 0; font-weight: 500; }
+  .notes h2:not(:first-child) { margin-top: 16px; }
+  .notes ul { margin: 0 0 0 0; padding-left: 20px; }
+  .notes li { margin-bottom: 4px; }
+  .notes code { background: #0F0F0E; padding: 1px 5px; border-radius: 2px; font-family: var(--font-mono); font-size: 11px; color: var(--wa-lcd); }
+  .hud-wrap { display: flex; justify-content: center; }
+
+  .splash { background: var(--wa-bg); border: 1px solid var(--wa-chrome); border-radius: 2px; padding: 36px 48px 28px 48px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: inset 0 1px 0 var(--wa-chrome-hi), 0 0 0 1px var(--wa-chrome-lo), 0 0 24px rgba(93, 202, 165, 0.08); width: 320px; margin: 0 auto; }
+  .splash-hero { width: 180px; height: auto; filter: invert(94%) sepia(5%) saturate(200%) hue-rotate(20deg) drop-shadow(0 0 6px rgba(93, 202, 165, 0.25)); display: block; }
+  .splash-name { font-family: var(--font-mono); font-size: 20px; color: var(--wa-lcd); text-transform: uppercase; letter-spacing: 5px; font-weight: 500; text-shadow: 0 0 8px rgba(93, 202, 165, 0.6), 0 0 2px rgba(93, 202, 165, 1); margin-top: 6px; }
+  .splash-tag { font-family: var(--font-mono); font-size: 9px; color: var(--wa-lcd-dim); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 3px rgba(47, 106, 85, 0.5); }
+  .splash-loading { font-family: var(--font-mono); font-size: 8px; color: var(--wa-text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 8px; opacity: 0.7; }
+
+  .wa { width: 540px; background: var(--wa-bg); border: 1px solid var(--wa-chrome); border-radius: 2px; font-family: var(--font-mono); font-size: 10px; color: var(--wa-text); overflow: hidden; box-shadow: inset 0 1px 0 var(--wa-chrome-hi), 0 0 0 1px var(--wa-chrome-lo); }
+
+  .wa-title { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; background: linear-gradient(to bottom, var(--wa-chrome-hi), var(--wa-chrome)); border-bottom: 1px solid var(--wa-chrome-lo); font-size: 9px; letter-spacing: 1px; color: var(--wa-text-dim); text-transform: uppercase; height: 20px; user-select: none; }
+  .wa-title-left { display: flex; align-items: center; gap: 4px; min-width: 0; }
+  .wa-title-app { color: var(--wa-text-dim); white-space: nowrap; padding: 0 4px 0 2px; font-weight: 500; letter-spacing: 1.5px; }
+  .wa-logo { display: block; margin-left: 2px; filter: invert(94%) sepia(5%) saturate(200%) hue-rotate(20deg) drop-shadow(0 0 2px rgba(93, 202, 165, 0.3)); }
+  .wa-profile { display: flex; align-items: center; gap: 4px; padding: 0 6px; border: 1px solid var(--wa-chrome-lo); background: var(--wa-panel); border-radius: 1px; cursor: pointer; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--wa-text); font-family: var(--font-mono); box-shadow: inset 0 1px 0 var(--wa-chrome-hi); height: 14px; }
+  .wa-profile-swatch { width: 8px; height: 8px; background: var(--wa-text-dim); }
+  .wa-title-state { color: var(--wa-lcd); font-variant-numeric: tabular-nums; padding: 0 8px; border-left: 1px solid var(--wa-chrome-lo); border-right: 1px solid var(--wa-chrome-lo); margin-left: 2px; height: 14px; line-height: 14px; }
+  .wa-title-right { display: flex; gap: 2px; align-items: center; }
+  .wa-tbtn { width: 18px; height: 14px; border: 1px solid var(--wa-chrome-lo); background: var(--wa-panel); font-size: 10px; text-align: center; color: var(--wa-text-dim); cursor: pointer; padding: 0; font-family: var(--font-mono); border-radius: 0; box-shadow: inset 0 1px 0 var(--wa-chrome-hi); display: inline-flex; align-items: center; justify-content: center; }
+  .wa-tbtn:hover { color: var(--wa-lcd); border-color: var(--wa-lcd); }
+  .wa-tbtn.active { color: var(--wa-lcd); border-color: var(--wa-lcd-dim); background: var(--wa-lcd-deep); }
+
+  .wa-main { display: grid; grid-template-columns: 1fr 140px; gap: 6px; padding: 6px; background: var(--wa-bg); }
+  .wa-center { padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .wa-right { display: flex; flex-direction: column; gap: 4px; }
+
+  .wa-lcd-panel { background: #0A0A09; border: 1px solid var(--wa-chrome-lo); padding: 4px 8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.6); border-radius: 1px; position: relative; }
+  .wa-readout { display: flex; gap: 10px; align-items: baseline; font-variant-numeric: tabular-nums; }
+  .wa-lcd-label { font-size: 8px; color: var(--wa-text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-right: 4px; }
+  .wa-lcd-big { font-size: 22px; font-weight: 500; letter-spacing: 1px; color: var(--wa-lcd); line-height: 1; text-shadow: 0 0 4px rgba(93, 202, 165, 0.5); font-family: var(--font-mono); }
+  .wa-lcd-sub { font-size: 10px; color: var(--wa-lcd); font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+  .wa-dotsep { font-size: 10px; color: var(--wa-chrome-hi); }
+  .wa-eta { display: flex; justify-content: space-between; align-items: center; margin-top: 3px; padding-top: 3px; border-top: 1px dashed var(--wa-chrome); font-size: 9px; color: var(--wa-text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wa-eta-v { color: var(--wa-lcd); font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+
+  .wa-viz-wrap { position: relative; background: #0A0A09; border: 1px solid var(--wa-chrome-lo); box-shadow: inset 0 1px 2px rgba(0,0,0,0.6); border-radius: 1px; padding: 3px 4px 2px 4px; }
+  .wa-viz-header { display: flex; justify-content: space-between; align-items: center; padding: 0 0 3px 0; }
+  .wa-viz-title { font-size: 8px; color: var(--wa-lcd-dim); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 3px rgba(47, 106, 85, 0.5); font-family: var(--font-mono); white-space: nowrap; }
+  .wa-viz-controls { display: flex; gap: 6px; align-items: center; }
+  .wa-phos-grp { display: flex; gap: 4px; }
+  .wa-phos { font-size: 9px; padding: 0 2px; background: transparent; color: var(--wa-lcd-dim); border: none; cursor: pointer; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; border-radius: 0; height: 12px; line-height: 12px; text-shadow: 0 0 2px rgba(47, 106, 85, 0.4); transition: color 0.1s, text-shadow 0.1s; }
+  .wa-phos:hover { color: var(--wa-lcd); text-shadow: 0 0 4px rgba(93, 202, 165, 0.6); }
+  .wa-phos.on { color: var(--wa-lcd); text-shadow: 0 0 5px rgba(93, 202, 165, 0.8), 0 0 2px rgba(93, 202, 165, 1); }
+  .wa-phos-sep { color: var(--wa-chrome); font-size: 9px; user-select: none; }
+
+  .wa-viz-stack { display: flex; flex-direction: column; gap: 1px; }
+  .wa-viz-row { height: 20px; display: flex; align-items: flex-end; padding: 0; gap: 1px; position: relative; }
+  .wa-viz-row-label { position: absolute; left: 2px; top: 1px; font-size: 7px; color: var(--wa-lcd-dim); text-transform: uppercase; letter-spacing: 0.5px; z-index: 2; padding: 0 2px; text-shadow: 0 0 3px rgba(47, 106, 85, 0.5); }
+  .wa-bar-container { flex: 1; height: 100%; position: relative; display: flex; align-items: flex-end; }
+  .wa-bar { position: absolute; bottom: 0; left: 0; right: 0; background: var(--wa-lcd); min-height: 1px; transition: height 0.08s linear; }
+  .wa-peak { position: absolute; left: 0; right: 0; height: 1px; background: var(--wa-text); transition: bottom 0.2s linear; }
+  .wa-budget-line { position: absolute; left: 2px; right: 2px; height: 1px; background: repeating-linear-gradient(to right, var(--wa-amber) 0, var(--wa-amber) 3px, transparent 3px, transparent 6px); z-index: 2; }
+
+  .wa-meter-panel { background: #0A0A09; border: 1px solid var(--wa-chrome-lo); padding: 4px 6px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.6); border-radius: 1px; display: flex; flex-direction: column; gap: 3px; }
+  .wa-meter { display: flex; align-items: center; gap: 4px; font-size: 9px; font-variant-numeric: tabular-nums; }
+  .wa-meter-label { width: 34px; font-size: 8px; color: var(--wa-lcd-dim); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 0 2px rgba(47, 106, 85, 0.4); }
+  .wa-meter-bar { flex: 1; height: 8px; background: #050605; border: 1px solid var(--wa-lcd-dim); position: relative; overflow: hidden; box-shadow: inset 0 1px 1px rgba(0,0,0,0.7); }
+  .wa-meter-fill { height: 100%; background: var(--wa-lcd); transition: width 0.3s, background 0.3s; box-shadow: 0 0 4px var(--wa-lcd); }
+  .wa-meter-fill.warn { background: var(--wa-amber); box-shadow: 0 0 4px var(--wa-amber); }
+  .wa-meter-fill.blue { background: var(--wa-blue); box-shadow: 0 0 4px var(--wa-blue); }
+  .wa-meter-val { width: 28px; text-align: right; font-size: 9px; color: var(--wa-lcd); font-family: var(--font-mono); text-shadow: 0 0 3px rgba(93, 202, 165, 0.4); }
+  .wa-meter-val.amber { color: var(--wa-amber); text-shadow: 0 0 3px rgba(239, 159, 39, 0.4); }
+
+  .wa-vu-under { display: flex; flex-direction: column; gap: 4px; }
+  .wa-vu { width: 100%; height: 54px; background: #0A0A09; border: 1px solid var(--wa-chrome-lo); box-shadow: inset 0 1px 2px rgba(0,0,0,0.6); position: relative; overflow: hidden; border-radius: 1px; }
+  .wa-led-strip { width: 100%; height: 14px; background: #0A0A09; border: 1px solid var(--wa-chrome-lo); display: flex; align-items: center; gap: 2px; padding: 0 4px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.6); border-radius: 1px; box-sizing: border-box; }
+  .wa-led { flex: 1; max-width: 7px; height: 6px; background: var(--wa-lcd-dim); }
+  .wa-led.on { background: var(--wa-lcd); box-shadow: 0 0 3px var(--wa-lcd); }
+  .wa-led.amber { background: var(--wa-amber); box-shadow: 0 0 3px var(--wa-amber); }
+
+  .wa-sessions { background: var(--wa-panel); border-top: 1px solid var(--wa-chrome-lo); }
+  .wa-sessions-head { display: grid; grid-template-columns: 12px 64px 74px 1fr 36px 38px 44px 36px; gap: 4px; padding: 3px 8px; font-size: 8px; color: var(--wa-text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--wa-chrome-lo); background: var(--wa-chrome); }
+  .wa-sess-row { display: grid; grid-template-columns: 12px 64px 74px 1fr 36px 38px 44px 36px; gap: 4px; padding: 3px 8px; font-size: 9px; font-variant-numeric: tabular-nums; align-items: center; border-bottom: 1px solid var(--wa-chrome-lo); cursor: pointer; color: var(--wa-text); }
+  .wa-sess-row:hover { background: var(--wa-chrome); }
+  .wa-sess-row:last-child { border-bottom: none; }
+  .wa-sess-dot { width: 7px; height: 7px; background: var(--wa-lcd); box-shadow: 0 0 3px var(--wa-lcd); }
+  .wa-sess-dot.warn { background: var(--wa-amber); box-shadow: 0 0 3px var(--wa-amber); }
+  .wa-sess-dot.idle { background: var(--wa-text-dim); box-shadow: none; }
+  .wa-sess-dot.opaque { background: transparent; border: 1px solid var(--wa-text-dim); box-shadow: none; }
+  .wa-sess-src, .wa-sess-model { color: var(--wa-text-dim); font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .wa-sess-owner { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; padding: 1px 3px; border: 1px solid var(--wa-chrome-lo); color: var(--wa-text-dim); }
+
+  .wa-statusbar { display: flex; align-items: center; gap: 0; padding: 0 6px; background: linear-gradient(to bottom, var(--wa-chrome), var(--wa-chrome-lo)); border-top: 1px solid var(--wa-chrome-lo); font-size: 8px; color: var(--wa-text-dim); text-transform: uppercase; letter-spacing: 0.5px; height: 18px; }
+  .wa-stat-cell { padding: 0 8px; height: 100%; display: flex; align-items: center; gap: 4px; border-right: 1px solid var(--wa-chrome-lo); white-space: nowrap; }
+  .wa-stat-cell:last-child { border-right: none; }
+  .wa-stat-cell.flex { flex: 1; overflow: hidden; border-right: 1px solid var(--wa-chrome-lo); }
+  .wa-hist-items { display: flex; gap: 10px; overflow: hidden; white-space: nowrap; }
+  .wa-hist-item { display: flex; align-items: center; gap: 3px; }
+  .wa-hist-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .wa-hist-dot.r { background: var(--wa-red); } .wa-hist-dot.a { background: var(--wa-amber); } .wa-hist-dot.g { background: var(--wa-lcd); }
+
+  .wa-mini { width: 420px; height: 28px; display: grid; grid-template-columns: 16px 42px 1fr auto auto auto 16px; gap: 6px; align-items: center; padding: 0 6px; background: var(--wa-bg); border: 1px solid var(--wa-chrome); border-radius: 2px; font-family: var(--font-mono); font-size: 9px; color: var(--wa-text); box-shadow: inset 0 1px 0 var(--wa-chrome-hi), 0 0 0 1px var(--wa-chrome-lo); }
+  .wa-mini-swatch { width: 7px; height: 7px; background: var(--wa-text-dim); }
+  .wa-mini-vu { width: 42px; height: 22px; background: #0A0A09; border: 1px solid var(--wa-chrome-lo); box-shadow: inset 0 1px 1px rgba(0,0,0,0.6); border-radius: 1px; position: relative; overflow: hidden; }
+  .wa-mini-val { font-size: 13px; font-weight: 500; color: var(--wa-lcd); text-shadow: 0 0 3px rgba(93, 202, 165, 0.5); letter-spacing: 0.5px; }
+  .wa-mini-lbl { font-size: 8px; color: var(--wa-text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .wa-mini-meter { display: flex; align-items: center; gap: 3px; font-size: 8px; }
+  .wa-mini-meter-bar { width: 26px; height: 6px; background: #0A0A09; border: 1px solid var(--wa-chrome-lo); position: relative; box-shadow: inset 0 1px 1px rgba(0,0,0,0.6); }
+  .wa-mini-meter-fill { height: 100%; background: var(--wa-lcd); }
+  .wa-mini-meter-fill.warn { background: var(--wa-amber); }
+  .wa-mini-meter-val { font-size: 8px; color: var(--wa-lcd); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .wa-mini-meter-val.amber { color: var(--wa-amber); }
+  .wa-mini-eta { font-size: 8px; color: var(--wa-text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wa-mini-eta-v { color: var(--wa-lcd); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .wa-mini-expand { width: 16px; height: 14px; border: 1px solid var(--wa-chrome-lo); background: var(--wa-panel); font-size: 9px; line-height: 12px; text-align: center; color: var(--wa-text-dim); cursor: pointer; padding: 0; font-family: var(--font-mono); border-radius: 0; box-shadow: inset 0 1px 0 var(--wa-chrome-hi); display: inline-flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Token-Man</h1>
+  <div class="tagline">It really whips the token's ass · v0.1 · static HTML preview</div>
+  <div class="jingle-hint" id="jingleHint">▶ click anywhere to hear the intro</div>
+
+  <div class="section">
+    <div class="section-lbl">Launch splash</div>
+    <div class="splash">
+      <img class="splash-hero" src="assets/token-man-full.svg" alt="Token-Man, mid-swing">
+      <div class="splash-name">Token-Man</div>
+      <div class="splash-tag">It really whips the token's ass</div>
+      <div class="splash-loading">v0.1 · initializing...</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-lbl">Full view</div>
+    <div class="hud-wrap">
+      <div class="wa">
+        <div class="wa-title">
+          <div class="wa-title-left">
+            <img class="wa-logo" src="assets/token-man-face.svg" width="14" height="14" alt="Token-Man">
+            <span class="wa-title-app">Token-Man</span>
+            <div class="wa-profile">
+              <span class="wa-profile-swatch"></span>
+              <span>profile</span>
+              <span style="color:var(--wa-text-dim)">▾</span>
+            </div>
+            <button class="wa-tbtn" title="settings">
+              <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 3.5 L5 6.5 M3.5 5 L6.5 5 M5 1 L5 2 M5 8 L5 9 M1 5 L2 5 M8 5 L9 5 M2.2 2.2 L2.9 2.9 M7.1 7.1 L7.8 7.8 M2.2 7.8 L2.9 7.1 M7.1 2.9 L7.8 2.2" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="square"/><circle cx="5" cy="5" r="1.3" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+            </button>
+            <span class="wa-title-state">OK · — LIVE</span>
+          </div>
+          <div class="wa-title-right">
+            <button class="wa-tbtn active" title="always on top">
+              <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3 1 L7 1 L6 3 L7 5 L5 5 L5 9 L4 9 L4 5 L3 5 L4 3 Z" fill="currentColor"/></svg>
+            </button>
+            <button class="wa-tbtn" title="minimize">
+              <svg width="10" height="10" viewBox="0 0 10 10"><rect x="2" y="7" width="6" height="1" fill="currentColor"/></svg>
+            </button>
+            <button class="wa-tbtn" title="close">
+              <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1" stroke-linecap="square"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="wa-main">
+          <div class="wa-center">
+            <div class="wa-lcd-panel">
+              <div class="wa-readout">
+                <div><span class="wa-lcd-label">TOK/MIN</span><span class="wa-lcd-big">0,000</span></div>
+                <span class="wa-dotsep">·</span>
+                <div><span class="wa-lcd-label">LIVE</span><span class="wa-lcd-sub">0</span></div>
+                <span class="wa-dotsep">·</span>
+                <div><span class="wa-lcd-label">TODAY</span><span class="wa-lcd-sub">$0.00</span></div>
+              </div>
+              <div class="wa-eta">
+                <span><span class="wa-lcd-label">LIMIT ETA</span><span class="wa-eta-v">— — —</span></span>
+                <span><span class="wa-lcd-label">BURN</span><span class="wa-eta-v">$0.00/hr</span></span>
+                <span><span class="wa-lcd-label">CACHE</span><span class="wa-eta-v">—%</span></span>
+              </div>
+            </div>
+
+            <div class="wa-viz-wrap">
+              <div class="wa-viz-header">
+                <span class="wa-viz-title">SPECTRUM IN/OUT</span>
+                <div class="wa-viz-controls">
+                  <div class="wa-phos-grp">
+                    <button class="wa-phos on">60S</button>
+                    <span class="wa-phos-sep">·</span>
+                    <button class="wa-phos">1H</button>
+                    <span class="wa-phos-sep">·</span>
+                    <button class="wa-phos">24H</button>
+                  </div>
+                  <span class="wa-phos-sep">|</span>
+                  <button class="wa-phos" title="snapshot state to clipboard as markdown">SNAP</button>
+                </div>
+              </div>
+              <div class="wa-viz-stack">
+                <div class="wa-viz-row" id="vizIn"><span class="wa-viz-row-label">IN</span></div>
+                <div class="wa-viz-row" id="vizOut"><span class="wa-viz-row-label">OUT</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wa-right">
+            <div class="wa-meter-panel">
+              <div class="wa-meter">
+                <span class="wa-meter-label">ctx</span>
+                <div class="wa-meter-bar"><div class="wa-meter-fill" style="width:0%"></div></div>
+                <span class="wa-meter-val">—%</span>
+              </div>
+              <div class="wa-meter">
+                <span class="wa-meter-label">5hr</span>
+                <div class="wa-meter-bar"><div class="wa-meter-fill" style="width:0%"></div></div>
+                <span class="wa-meter-val">—%</span>
+              </div>
+              <div class="wa-meter">
+                <span class="wa-meter-label">cache</span>
+                <div class="wa-meter-bar"><div class="wa-meter-fill" style="width:0%"></div></div>
+                <span class="wa-meter-val">—%</span>
+              </div>
+              <div class="wa-meter">
+                <span class="wa-meter-label">week</span>
+                <div class="wa-meter-bar"><div class="wa-meter-fill blue" style="width:0%"></div></div>
+                <span class="wa-meter-val">—%</span>
+              </div>
+            </div>
+            <div class="wa-vu-under">
+              <div class="wa-vu">
+                <svg width="100%" height="54" viewBox="0 0 140 54" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <radialGradient id="vuFace" cx="0.5" cy="1" r="1">
+                      <stop offset="0" stop-color="#1F3A30"/>
+                      <stop offset="1" stop-color="#0A0A09"/>
+                    </radialGradient>
+                  </defs>
+                  <path d="M 10 50 A 60 60 0 0 1 130 50 L 130 54 L 10 54 Z" fill="url(#vuFace)"/>
+                  <g stroke="#5DCAA5" stroke-width="0.5" fill="none" opacity="0.7">
+                    <line x1="18" y1="50" x2="20" y2="44"/><line x1="30" y1="50" x2="32" y2="38"/>
+                    <line x1="46" y1="50" x2="47" y2="32"/><line x1="70" y1="50" x2="70" y2="28"/>
+                  </g>
+                  <g stroke="#E24B4A" stroke-width="0.5" fill="none">
+                    <line x1="94" y1="50" x2="93" y2="32"/><line x1="110" y1="50" x2="108" y2="38"/><line x1="122" y1="50" x2="120" y2="44"/>
+                  </g>
+                  <path d="M 22 48 Q 70 16 118 48" fill="none" stroke="#5DCAA5" stroke-width="0.7" opacity="0.5"/>
+                  <path d="M 90 34 Q 104 40 118 48" fill="none" stroke="#E24B4A" stroke-width="0.7" opacity="0.7"/>
+                  <text x="18" y="48" font-family="monospace" font-size="5" fill="#5DCAA5" opacity="0.6">0</text>
+                  <text x="67" y="24" font-family="monospace" font-size="5" fill="#5DCAA5" opacity="0.6">5</text>
+                  <text x="116" y="48" font-family="monospace" font-size="5" fill="#E24B4A" opacity="0.8">10</text>
+                  <line id="vuNeedle" x1="70" y1="50" x2="70" y2="12" stroke="#F1EFE8" stroke-width="1.2" stroke-linecap="round" transform="rotate(-35 70 50)"/>
+                  <circle cx="70" cy="50" r="3" fill="#2C2C2A" stroke="#5F5E5A" stroke-width="0.4"/>
+                  <circle cx="70" cy="50" r="1.2" fill="#0A0A09"/>
+                  <text x="70" y="8" font-family="monospace" font-size="5" fill="#888780" text-anchor="middle" letter-spacing="0.8">TOK/SEC</text>
+                </svg>
+              </div>
+              <div class="wa-led-strip" id="ledStrip"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wa-sessions">
+          <div class="wa-sessions-head">
+            <span></span><span>source</span><span>model</span><span>project</span><span>ctx</span><span>t/m</span><span>cost</span><span>who</span>
+          </div>
+          <div class="wa-sess-row">
+            <span class="wa-sess-dot idle"></span>
+            <span class="wa-sess-src">code #1</span>
+            <span class="wa-sess-model">—</span>
+            <span>no active session</span>
+            <span>—</span><span>—</span><span>—</span>
+            <span class="wa-sess-owner">—</span>
+          </div>
+          <div class="wa-sess-row">
+            <span class="wa-sess-dot idle"></span>
+            <span class="wa-sess-src">dispatch</span>
+            <span class="wa-sess-model">—</span>
+            <span>no active session</span>
+            <span>—</span><span>—</span><span>—</span>
+            <span class="wa-sess-owner">—</span>
+          </div>
+          <div class="wa-sess-row">
+            <span class="wa-sess-dot opaque"></span>
+            <span class="wa-sess-src">chrome</span>
+            <span class="wa-sess-model">—</span>
+            <span>opaque (plan agg only)</span>
+            <span>—</span><span>—</span><span>—</span>
+            <span class="wa-sess-owner">—</span>
+          </div>
+          <div class="wa-sess-row">
+            <span class="wa-sess-dot opaque"></span>
+            <span class="wa-sess-src">cowork</span>
+            <span class="wa-sess-model">—</span>
+            <span>opaque (plan agg only)</span>
+            <span>—</span><span>—</span><span>—</span>
+            <span class="wa-sess-owner">—</span>
+          </div>
+        </div>
+
+        <div class="wa-statusbar">
+          <span class="wa-stat-cell">0 SRC · 0 LIVE</span>
+          <span class="wa-stat-cell flex">
+            <div class="wa-hist-items">
+              <span class="wa-hist-item" style="color:var(--wa-text-dim)">no recent events</span>
+            </div>
+          </span>
+          <span class="wa-stat-cell" title="model registry">REG — · —</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-lbl">Minimized strip — 28px tall</div>
+    <div class="hud-wrap">
+      <div class="wa-mini">
+        <span class="wa-mini-swatch" title="active profile"></span>
+        <div class="wa-mini-vu">
+          <svg width="42" height="22" viewBox="0 0 42 22">
+            <path d="M 2 20 A 19 19 0 0 1 40 20 L 40 22 L 2 22 Z" fill="url(#vuFace)"/>
+            <path d="M 7 19 Q 21 6 35 19" fill="none" stroke="#5DCAA5" stroke-width="0.4" opacity="0.5"/>
+            <path d="M 28 14 Q 32 16 35 19" fill="none" stroke="#E24B4A" stroke-width="0.4" opacity="0.7"/>
+            <line x1="21" y1="20" x2="21" y2="5" stroke="#F1EFE8" stroke-width="0.8" stroke-linecap="round" transform="rotate(-30 21 20)"/>
+            <circle cx="21" cy="20" r="1.5" fill="#2C2C2A" stroke="#5F5E5A" stroke-width="0.2"/>
+          </svg>
+        </div>
+        <div><span class="wa-mini-lbl">T/M</span> <span class="wa-mini-val">0,000</span></div>
+        <div class="wa-mini-meter" title="context usage">
+          <span class="wa-mini-lbl">CTX</span>
+          <div class="wa-mini-meter-bar"><div class="wa-mini-meter-fill" style="width:0%"></div></div>
+          <span class="wa-mini-meter-val">—%</span>
+        </div>
+        <div class="wa-mini-meter" title="5-hour window">
+          <span class="wa-mini-lbl">5H</span>
+          <div class="wa-mini-meter-bar"><div class="wa-mini-meter-fill" style="width:0%"></div></div>
+          <span class="wa-mini-meter-val">—%</span>
+        </div>
+        <div class="wa-mini-eta"><span class="wa-mini-lbl">ETA</span> <span class="wa-mini-eta-v">— — —</span></div>
+        <button class="wa-mini-expand" title="restore full view">▣</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h2>About Token-Man</h2>
+    <p><strong>Token-Man.</strong> It really whips the token's ass.</p>
+    <p>A static HTML preview of the planned always-on-top heads-up display for monitoring token usage across the Claude ecosystem. It unifies visibility across Claude Code sessions, Dispatch runs, claude.ai chat, Cowork, Claude for Chrome, Claude for Excel, and direct API workloads — distinguishing clearly between instrumented sources (showing live context, tokens per minute, cost) and opaque sources (showing only plan-window aggregate from the Admin API).</p>
+    <p>Placeholder values (<code>—</code>, <code>0,000</code>, "no active session") indicate where live data will render in the production build. The spectrum bars at the top and the LED strip at the bottom-right are animated here as a design demonstration. Click anywhere on the page to hear the intro jingle.</p>
+
+    <h2>What the controls do</h2>
+    <ul>
+      <li><strong>Profile selector</strong> — switch between users or view all profiles aggregated. Each profile carries its own accent color, plan type, and API scope.</li>
+      <li><strong>Settings (⚙)</strong> — profile management, API keys, red-mode thresholds, notification preferences, source connections.</li>
+      <li><strong>Pin (📌)</strong> — toggle always-on-top window behavior.</li>
+      <li><strong>Time window (60S / 1H / 24H)</strong> — switch the spectrum to show the last minute, hour, or day.</li>
+      <li><strong>Snap</strong> — copy current state to clipboard as a Markdown block, for bug reports or chat pastes.</li>
+      <li><strong>Session rows</strong> — click to expand inline with per-session sparkline, cache rate, burn rate, and actions (focus window, /compact, /clear).</li>
+      <li><strong>Registry status</strong> — click to check for model registry updates.</li>
+    </ul>
+
+    <h2>Not included in this mockup</h2>
+    <ul>
+      <li>Real data ingestion — the production build reads ccusage JSONL, OTel exports, and the Admin API.</li>
+      <li>Red-alert mode, which triggers when any live session crosses critical thresholds.</li>
+      <li>Session row expand-in-place with action buttons.</li>
+      <li>Persistent window state, tray integration, Windows notification toasts.</li>
+    </ul>
+
+    <h2>Companion</h2>
+    <p>Pair this HUD with the <code>token-management</code> Claude skill (included in the same distribution) to get both the visual monitoring layer and an in-chat diagnostic skill that Claude invokes when you ask about context, cost, caching, or limits.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ============ JINGLE ============
+  // Web Audio intro: "Token-Man, it really whips the token's ass" + donkey hee-haw
+  // Speech via SpeechSynthesis (built into every browser); hee-haw synthesized from oscillators.
+  var jinglePlayed = false;
+  var hint = document.getElementById('jingleHint');
+
+  function playHeeHaw() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var now = ctx.currentTime;
+
+      // "HEE" — higher pitched, nasal, sawtooth with vibrato
+      function braySound(startTime, baseFreq, duration, upward) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        var filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = baseFreq * 2;
+        filter.Q.value = 3;
+        osc.type = 'sawtooth';
+        // Pitch bend and vibrato for donkey-ish warble
+        osc.frequency.setValueAtTime(baseFreq, startTime);
+        if (upward) {
+          osc.frequency.linearRampToValueAtTime(baseFreq * 1.4, startTime + duration * 0.3);
+          osc.frequency.linearRampToValueAtTime(baseFreq * 1.1, startTime + duration);
+        } else {
+          osc.frequency.linearRampToValueAtTime(baseFreq * 0.6, startTime + duration * 0.6);
+          osc.frequency.linearRampToValueAtTime(baseFreq * 0.45, startTime + duration);
+        }
+        // Vibrato
+        var lfo = ctx.createOscillator();
+        var lfoGain = ctx.createGain();
+        lfo.frequency.value = 18;
+        lfoGain.gain.value = baseFreq * 0.08;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        // Envelope
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.25, startTime + 0.03);
+        gain.gain.setValueAtTime(0.25, startTime + duration - 0.08);
+        gain.gain.linearRampToValueAtTime(0, startTime + duration);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        lfo.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+        lfo.stop(startTime + duration + 0.05);
+      }
+
+      // HEE (inhale, rising pitch)
+      braySound(now, 320, 0.35, true);
+      // HAW (exhale, falling pitch, lower)
+      braySound(now + 0.4, 220, 0.55, false);
+    } catch (e) {
+      console.log('audio context unavailable:', e);
+    }
+  }
+
+  function playJingle() {
+    if (jinglePlayed) return;
+    jinglePlayed = true;
+    hint.classList.add('played');
+    hint.textContent = '▷ playing intro...';
+
+    if ('speechSynthesis' in window) {
+      // Give the browser a moment to load voices
+      setTimeout(function() {
+        var utter = new SpeechSynthesisUtterance("Token Man! It really whips the token's ass!");
+        utter.rate = 1.05;
+        utter.pitch = 0.85;
+        utter.volume = 1;
+        // Try to pick a male voice if available
+        var voices = window.speechSynthesis.getVoices();
+        var preferred = voices.find(function(v) {
+          return /male|david|daniel|alex|fred|mark/i.test(v.name);
+        }) || voices.find(function(v) { return v.lang && v.lang.startsWith('en'); });
+        if (preferred) utter.voice = preferred;
+
+        utter.onend = function() {
+          // Then the hee-haw, 200ms after speech ends
+          setTimeout(playHeeHaw, 200);
+          setTimeout(function() { hint.textContent = '▶ click anywhere to replay'; jinglePlayed = false; }, 1500);
+        };
+        utter.onerror = function() {
+          playHeeHaw();
+          setTimeout(function() { hint.textContent = '▶ click anywhere to replay'; jinglePlayed = false; }, 1500);
+        };
+        window.speechSynthesis.speak(utter);
+      }, 100);
+    } else {
+      // Fallback: just the hee-haw
+      playHeeHaw();
+      setTimeout(function() { hint.textContent = '▶ click anywhere to replay'; jinglePlayed = false; }, 1500);
+    }
+  }
+
+  // Autoplay is blocked; require any user interaction first.
+  document.addEventListener('click', function handler() {
+    playJingle();
+  });
+
+  // Pre-warm voices (Chrome needs this)
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
+  }
+
+  // ============ HUD ANIMATIONS ============
+  var ledStrip = document.getElementById('ledStrip');
+  var leds = [];
+  for (var i = 0; i < 16; i++) { var el = document.createElement('div'); el.className = 'wa-led'; ledStrip.appendChild(el); leds.push(el); }
+
+  function vizBarsInit(rowEl, count) {
+    var arr = [];
+    var container = document.createElement('div');
+    container.style.cssText = 'flex:1; height:100%; display:flex; align-items:flex-end; gap:1px; margin-left:18px; position:relative;';
+    for (var i = 0; i < count; i++) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative; flex:1; height:100%;';
+      var bar = document.createElement('div'); bar.className = 'wa-bar'; bar.style.height = '1px';
+      var peak = document.createElement('div'); peak.className = 'wa-peak'; peak.style.bottom = '1px';
+      wrap.appendChild(bar); wrap.appendChild(peak);
+      container.appendChild(wrap);
+      arr.push({ bar: bar, peak: peak, peakVal: 0 });
+    }
+    var budget = document.createElement('div'); budget.className = 'wa-budget-line'; budget.style.bottom = '60%';
+    container.appendChild(budget);
+    rowEl.appendChild(container);
+    return arr;
+  }
+  var inBars = vizBarsInit(document.getElementById('vizIn'), 40);
+  var outBars = vizBarsInit(document.getElementById('vizOut'), 40);
+
+  var vuNeedle = document.getElementById('vuNeedle');
+  var needleTarget = -35;
+  function tick() {
+    needleTarget += (Math.random() - 0.5) * 25;
+    if (needleTarget < -40) needleTarget = -40;
+    if (needleTarget > 35) needleTarget = 35;
+    var jitter = (Math.random() - 0.5) * 4;
+    vuNeedle.setAttribute('transform', 'rotate(' + (needleTarget + jitter) + ' 70 50)');
+    var intensity = (needleTarget + 45) / 90;
+    for (var i = 0; i < leds.length; i++) {
+      var threshold = (i + 1) / leds.length;
+      var active = intensity >= threshold - 0.05 + (Math.random() - 0.5) * 0.15;
+      leds[i].className = 'wa-led';
+      if (active) { if (i >= 12) leds[i].classList.add('amber'); else leds[i].classList.add('on'); }
+    }
+    function upd(arr, scale) {
+      for (var i = 0; i < arr.length; i++) {
+        var h = Math.max(1, (Math.random() * 0.6 + 0.4) * intensity * scale * 18);
+        arr[i].bar.style.height = h.toFixed(1) + 'px';
+        if (h > arr[i].peakVal) arr[i].peakVal = h; else arr[i].peakVal = Math.max(1, arr[i].peakVal - 0.4);
+        arr[i].peak.style.bottom = arr[i].peakVal.toFixed(1) + 'px';
+      }
+    }
+    upd(inBars, 1); upd(outBars, 0.7);
+  }
+  setInterval(tick, 140); tick();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "version": "4.7",
+  "updated": "2026-04-23",
+  "_comment": "context_window reflects effective subscription context (200k). Extended 1M context requires beta flags not accessible to subscription users.",
+  "models": {
+    "claude-opus-4-7": {
+      "context_window": 204800,
+      "tokenizer_inflation": 1.22,
+      "pricing_input_per_mtok": 15.00,
+      "pricing_output_per_mtok": 75.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-opus-4-6": {
+      "context_window": 204800,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 15.00,
+      "pricing_output_per_mtok": 75.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-sonnet-4-6": {
+      "context_window": 204800,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 3.00,
+      "pricing_output_per_mtok": 15.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-haiku-4-5-20251001": {
+      "context_window": 204800,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 1.00,
+      "pricing_output_per_mtok": 5.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    }
+  }
+}
