@@ -1,6 +1,6 @@
 [package]
 name = "token-man"
-version = "1.0.0"
+version = "1.0.6"
 description = "Token-Man — Winamp-inspired HUD for Claude token usage"
 authors = ["Token-Man contributors"]
 edition = "2021"
