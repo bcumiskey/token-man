@@ -4,6 +4,7 @@
 //! from the OS keychain. On failure, emits a StatusChange to mark the source
 //! stale; auto-retries with exponential backoff.
 
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -19,6 +20,10 @@ const KEYRING_SERVICE: &str = "token-man";
 
 pub async fn run(tx: mpsc::Sender<SourceEvent>, cfg: Arc<RwLock<Config>>) {
     let mut backoff = Duration::from_secs(60);
+    // F12 fix v1.0.6: rate-limit "admin poll failed" warns to once per
+    // (profile, process). Repeated failures still trigger StatusChange
+    // events and exponential backoff; the log was the spam.
+    let mut warned_profiles: HashSet<String> = HashSet::new();
 
     loop {
         let (interval_s, profiles, endpoint) = {
@@ -59,7 +64,14 @@ pub async fn run(tx: mpsc::Sender<SourceEvent>, cfg: Arc<RwLock<Config>>) {
                     }
                 }
                 Err(e) => {
-                    warn!("admin poll failed for profile {}: {e:?}", profile.id);
+                    if warned_profiles.insert(profile.id.clone()) {
+                        warn!(
+                            "admin poll failed for profile {}: {e:?} (further failures suppressed for this session)",
+                            profile.id
+                        );
+                    } else {
+                        debug!("admin poll failed for profile {}: {e:?}", profile.id);
+                    }
                     for k in [SourceKind::ClaudeAi, SourceKind::Cowork, SourceKind::Chrome, SourceKind::Excel, SourceKind::Api] {
                         let _ = tx.send(SourceEvent::StatusChange {
                             source_id: format!("{}:{}", k.label(), profile.id),

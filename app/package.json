@@ -1,6 +1,6 @@
 {
   "name": "token-man",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "Token-Man — a Winamp-inspired HUD for Claude token usage. It really whips the token's ass.",
   "private": true,
   "scripts": {

@@ -1,3 +1,8 @@
+> **SUPERSEDED — HISTORICAL ONLY. DO NOT USE AS GUIDANCE.**
+> Archived 2026-09-02. Prices, model names and the cache multiplier in this file
+> are from April 2026 and are wrong. The live version of this material is the
+> `token-management` skill on the account. Kept for history only.
+
 ---
 name: token-management
 description: Diagnose and resolve token usage, context-window, and cost problems across the Claude ecosystem. Use this skill whenever the user mentions tokens, cost, billing, context window, context rot, compaction, /compact, /clear, /context, /cost, ccusage, statusline, cache hits, cache misses, prompt caching, rate limits, usage limits, the 5-hour window, "am I going to hit my limit", "why is this so expensive", subagent costs, Opus vs Sonnet vs Haiku selection, model routing, skill bloat, MCP tool bloat, Cowork cost, or any variant of "I'm running out of context" / "session is getting slow" / "Claude keeps forgetting". Also use proactively when a Claude Code session appears to be deep (many tool calls, long conversation, or the user mentions the session has been running a while) and cost/context implications would inform the response. Covers Claude Code, claude.ai, Cowork, Chrome, Excel, and direct API workloads.

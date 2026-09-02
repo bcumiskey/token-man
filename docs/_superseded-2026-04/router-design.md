@@ -1,3 +1,8 @@
+> **SUPERSEDED — HISTORICAL ONLY. DO NOT USE AS GUIDANCE.**
+> Archived 2026-09-02. Prices, model names and the cache multiplier in this file
+> are from April 2026 and are wrong. The live version of this material is the
+> `token-management` skill on the account. Kept for history only.
+
 # Router design sketch — DEFERRED
 
 **Status:** Design only. Do not implement until after a 2–4 week observation period using the passive tooling (ccusage, ccstatusline, OTel). The point of waiting is to learn what policies you actually want to enforce before introducing a component that sits in the request path.

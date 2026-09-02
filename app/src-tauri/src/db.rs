@@ -177,6 +177,54 @@ impl Db {
             Ok((i, o))
         })
     }
+
+    /// Return (input, output, cache_read, cache_write) summed since `since_ms`.
+    /// Used by 5h%/week% which must include cache tokens — see canonical
+    /// definition comment at the call site in aggregator::recompute_metrics.
+    pub fn sum_all_tokens_since(&self, since_ms: i64) -> Result<(i64, i64, i64, i64)> {
+        self.with_conn(|c| {
+            let mut stmt = c.prepare(
+                "SELECT COALESCE(SUM(input_tokens), 0),
+                        COALESCE(SUM(output_tokens), 0),
+                        COALESCE(SUM(cache_read_tokens), 0),
+                        COALESCE(SUM(cache_write_tokens), 0)
+                 FROM events WHERE timestamp >= ?1"
+            )?;
+            let row: (i64, i64, i64, i64) = stmt.query_row([since_ms], |r| {
+                Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?))
+            })?;
+            Ok(row)
+        })
+    }
+
+    /// Per-source cost since `since_ms`. Used by daily-bounded cost_today
+    /// recompute (F4 v1.0.6).
+    pub fn cost_by_source_since(&self, since_ms: i64) -> Result<Vec<(String, f64)>> {
+        self.with_conn(|c| {
+            let mut stmt = c.prepare(
+                "SELECT source_id, COALESCE(SUM(cost_usd), 0.0)
+                 FROM events
+                 WHERE timestamp >= ?1
+                 GROUP BY source_id",
+            )?;
+            let rows: Vec<(String, f64)> = stmt
+                .query_map([since_ms], |r| Ok((r.get(0)?, r.get(1)?)))?
+                .collect::<rusqlite::Result<Vec<_>>>()?;
+            Ok(rows)
+        })
+    }
+
+    /// Sum of cost_usd for events with timestamp in [since_ms, until_ms).
+    /// Used by daily-bounded cost_today recompute (F4).
+    pub fn sum_cost_between(&self, since_ms: i64, until_ms: i64) -> Result<f64> {
+        self.with_conn(|c| {
+            let mut stmt = c.prepare(
+                "SELECT COALESCE(SUM(cost_usd), 0.0) FROM events WHERE timestamp >= ?1 AND timestamp < ?2",
+            )?;
+            let v: f64 = stmt.query_row([since_ms, until_ms], |r| r.get(0))?;
+            Ok(v)
+        })
+    }
 }
 
 #[derive(Debug, Clone)]

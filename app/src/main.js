@@ -128,7 +128,11 @@ function renderState(st) {
 
   tokPerMin.textContent = fmtNum(st.metrics.tokensPerMin);
   liveCount.textContent = String(st.metrics.liveSessions);
-  costToday.textContent = "$" + st.metrics.costToday.toFixed(2);
+  costToday.textContent =
+    "$" + st.metrics.costToday.toFixed(2) + (st.metrics.costIncomplete ? "+" : "");
+  costToday.title = st.metrics.costIncomplete
+    ? "A source is running a model missing from the registry — its spend is not in this total."
+    : "";
   limitEta.textContent = st.metrics.limitEta ?? "— — —";
   burnRate.textContent = "$" + st.metrics.burnPerHour.toFixed(2) + "/hr";
   cacheRate.textContent = Math.round(st.metrics.cacheHitRate) + "%";
@@ -228,6 +232,7 @@ function renderSessions(sources) {
         : s.status === "stale"
         ? "stale"
         : "idle";
+      const unpriced = s.modelKnown === false;
       const ctx = s.contextPercent != null ? Math.round(s.contextPercent) + "%" : "—";
       const tpm = s.tokensPerMin != null ? fmtNum(s.tokensPerMin) : "—";
       const proj = s.project ?? (s.isOpaque ? "opaque (plan agg)" : "—");
@@ -241,11 +246,11 @@ function renderSessions(sources) {
       return `<div class="wa-sess-row${expandedSession === s.id ? " expanded" : ""}" data-id="${s.id}">
         <span class="wa-sess-dot ${dotCls}"></span>
         <span class="wa-sess-src">${escapeHtml(s.kind)}</span>
-        <span class="wa-sess-model">${escapeHtml(shortModel(s.model))}</span>
+        <span class="wa-sess-model"${unpriced ? ' title="model not in registry — cost not computed"' : ""}>${escapeHtml(shortModel(s.model))}${unpriced ? " (?)" : ""}</span>
         <span>${escapeHtml(proj)}</span>
         <span>${ctx}</span>
         <span>${tpm}</span>
-        <span>$${s.costToday.toFixed(2)}</span>
+        <span>${unpriced ? "—" : "$" + s.costToday.toFixed(2)}</span>
         <span class="wa-sess-owner">${escapeHtml(s.owner)}</span>
         ${expandedHtml}
       </div>`;

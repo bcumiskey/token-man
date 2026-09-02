@@ -105,6 +105,11 @@ pub struct SourceState {
     pub session_start: Option<DateTime<Utc>>,
     pub last_activity: DateTime<Utc>,
     pub is_opaque: bool,
+    /// False when this source's model is absent from the model registry. Its
+    /// cost could not be computed and is therefore NOT included in any total.
+    /// Surfaced in the HUD so an unpriced source can never be read as a free
+    /// one — the failure this app exists to catch.
+    pub model_known: bool,
     pub status: SourceStatus,
     // Rolling token accounting.
     pub input_tokens_today: u64,
@@ -112,10 +117,18 @@ pub struct SourceState {
     pub cache_read_today: u64,
     pub cache_write_today: u64,
     pub recent_ticks: VecDeque<(DateTime<Utc>, u64, u64)>, // (t, in, out)
-    /// Max observed total context tokens (input + cache_read + cache_write) on
-    /// any single assistant turn. Represents current context fill; resets only
-    /// when a new session starts.
-    pub context_max_tokens: u64,
+    /// context_current_tokens = current context-window utilization at the most
+    /// recent assistant turn (input + cache_read + cache_write of that turn).
+    /// NOT a peak/historical value. Each Claude Code assistant turn reports
+    /// its full prompt under those three fields, so the latest turn IS the
+    /// current fill. Drops naturally on /compact, sub-agent boundaries, and
+    /// tool-result trimming, exactly as `/context` does. (F1 fix v1.0.6.)
+    pub context_current_tokens: u64,
+    /// Lifetime-of-session peak; retained for telemetry / future diagnostics.
+    /// Do NOT surface this in the HUD — the prior bug in v1.0.5 was using it
+    /// as the displayed CTX %, which pinned the meter to a historical value
+    /// after /compact.
+    pub context_peak_tokens: u64,
 }
 
 impl SourceState {
@@ -134,13 +147,15 @@ impl SourceState {
             session_start: Some(now),
             last_activity: now,
             is_opaque: kind.is_opaque(),
+            model_known: true,
             status: SourceStatus::Active,
             input_tokens_today: 0,
             output_tokens_today: 0,
             cache_read_today: 0,
             cache_write_today: 0,
             recent_ticks: VecDeque::with_capacity(256),
-            context_max_tokens: 0,
+            context_current_tokens: 0,
+            context_peak_tokens: 0,
         }
     }
 }
@@ -187,6 +202,10 @@ pub struct GlobalMetrics {
     pub spectrum_60s: RingBuffer<(f32, f32)>,
     pub spectrum_1h: RingBuffer<(f32, f32)>,
     pub spectrum_24h: RingBuffer<(f32, f32)>,
+    /// EWMA-smoothed burn $/hr (F3 fix v1.0.6). See canonical-definition
+    /// comment at the computation site in aggregator::recompute_metrics.
+    /// `None` until first sample is seeded.
+    pub burn_rate_ewma: Option<f32>,
 }
 
 impl Default for GlobalMetrics {
@@ -206,6 +225,7 @@ impl Default for GlobalMetrics {
             spectrum_60s: RingBuffer::new(40),
             spectrum_1h: RingBuffer::new(40),
             spectrum_24h: RingBuffer::new(40),
+            burn_rate_ewma: None,
         }
     }
 }
@@ -248,11 +268,27 @@ impl Default for SpectrumWindow {
 impl AppState {
     pub fn new(config: &Config, _db: &Db) -> anyhow::Result<Self> {
         let registry = ModelRegistry::load_bundled()?;
-        let profile_meta = config
+        let profile_meta: HashMap<ProfileId, (String, String)> = config
             .profiles
             .iter()
             .map(|p| (p.id.clone(), (p.name.clone(), p.color.clone())))
             .collect();
+        // F12 fix v1.0.6: emit the active-profile-mismatch warning once at
+        // startup with resolution detail. The previous per-tick warn was
+        // log spam (~2/s for the lifetime of the process).
+        if !profile_meta.contains_key(&config.app.active_profile) {
+            let resolved = config
+                .profiles
+                .first()
+                .map(|p| p.id.as_str())
+                .unwrap_or("<no profiles>");
+            tracing::warn!(
+                target: "config",
+                "active_profile '{}' not found in [profiles]; falling back to '{}' for this session. Edit config.toml to fix.",
+                config.app.active_profile,
+                resolved
+            );
+        }
         Ok(Self {
             sources: HashMap::new(),
             global: GlobalMetrics::default(),
@@ -284,9 +320,13 @@ impl AppState {
                 cost_today: s.cost_today,
                 cache_hit_rate: s.cache_hit_rate,
                 is_opaque: s.is_opaque,
+                model_known: s.model_known,
                 status: s.status,
             })
             .collect();
+
+        // Any unpriced source means every cost figure below is a floor.
+        let cost_incomplete = sources.iter().any(|s| !s.model_known);
 
         let spectrum = match self.spectrum_window {
             SpectrumWindow::S60 => &self.global.spectrum_60s,
@@ -328,6 +368,7 @@ impl AppState {
                 ctx_worst: self.global.context_percent_worst,
                 five_hour: self.global.five_hour_usage_percent,
                 week: self.global.week_usage_percent,
+                cost_incomplete,
             },
             sources,
             spectrum: SpectrumView {
@@ -337,22 +378,29 @@ impl AppState {
             },
             alerts,
             profile: {
-                let (name, color) = self
+                // F12 fix v1.0.6: profile lookup mirrors
+                // Config::active_profile() resolution semantics: try exact id
+                // match, else fall back to the first profile in the list.
+                // The not-found warning is emitted ONCE at startup (see
+                // AppState::new), not on every render tick.
+                let (id, name, color) = self
                     .profile_meta
                     .get(&self.active_profile)
-                    .cloned()
+                    .map(|(n, c)| (self.active_profile.clone(), n.clone(), c.clone()))
+                    .or_else(|| {
+                        self.profile_meta
+                            .iter()
+                            .next()
+                            .map(|(id, (n, c))| (id.clone(), n.clone(), c.clone()))
+                    })
                     .unwrap_or_else(|| {
-                        tracing::warn!(
-                            "active profile '{}' not in profile_meta; using fallback",
-                            self.active_profile
-                        );
-                        (self.active_profile.clone(), "#378ADD".into())
+                        (
+                            self.active_profile.clone(),
+                            self.active_profile.clone(),
+                            "#378ADD".into(),
+                        )
                     });
-                ProfileView {
-                    id: self.active_profile.clone(),
-                    name,
-                    color,
-                }
+                ProfileView { id, name, color }
             },
             registry: RegistryView {
                 version: self.registry.version.clone(),
@@ -425,6 +473,10 @@ pub struct MetricsView {
     #[serde(rename = "fiveHour")]
     pub five_hour: f32,
     pub week: f32,
+    /// True when at least one live source ran a model the registry does not
+    /// price. `cost_today` is then a floor, not a total.
+    #[serde(rename = "costIncomplete")]
+    pub cost_incomplete: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -444,6 +496,8 @@ pub struct SourceView {
     pub cache_hit_rate: Option<f32>,
     #[serde(rename = "isOpaque")]
     pub is_opaque: bool,
+    #[serde(rename = "modelKnown")]
+    pub model_known: bool,
     pub status: SourceStatus,
 }
 

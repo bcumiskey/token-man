@@ -34,17 +34,26 @@ impl ModelRegistry {
         Ok(r)
     }
 
+    /// Whether the registry knows this model at all.
+    pub fn is_known(&self, model: &str) -> bool {
+        self.models.contains_key(model)
+    }
+
     /// Cost for a single turn, in USD.
-    pub fn cost(&self, model: &str, input: u64, output: u64, cache_read: u64, cache_write: u64) -> f32 {
-        let Some(m) = self.models.get(model) else {
-            return 0.0;
-        };
+    ///
+    /// Returns `None` when the model is absent from the registry. Callers MUST
+    /// treat that as "unknown", never as zero: the previous `0.0` fallback
+    /// silently reported no spend for every session run on a model newer than
+    /// the bundled registry, which is the failure mode this app exists to
+    /// prevent.
+    pub fn cost(&self, model: &str, input: u64, output: u64, cache_read: u64, cache_write: u64) -> Option<f32> {
+        let m = self.models.get(model)?;
         let per = 1_000_000.0_f32;
         let input_cost = (input as f32 / per) * m.pricing_input_per_mtok;
         let output_cost = (output as f32 / per) * m.pricing_output_per_mtok;
         let read_cost = (cache_read as f32 / per) * m.pricing_input_per_mtok * m.cache_read_multiplier;
         let write_cost = (cache_write as f32 / per) * m.pricing_input_per_mtok * m.cache_write_multiplier;
-        input_cost + output_cost + read_cost + write_cost
+        Some(input_cost + output_cost + read_cost + write_cost)
     }
 
     pub fn context_window(&self, model: &str) -> Option<u64> {
