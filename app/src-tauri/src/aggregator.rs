@@ -8,7 +8,7 @@ use chrono::{Datelike, Duration as ChronoDuration, Local, TimeZone, Utc};
 use tauri::{AppHandle, Emitter};
 use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use crate::config::Config;
 use crate::db::{Db, EventRow};
@@ -135,6 +135,16 @@ impl Aggregator {
             u.cache_read_tokens,
             u.cache_write_tokens,
         );
+        if cost.is_none() {
+            // Unknown model: record NULL, not 0.0. A zero here would be
+            // indistinguishable from a genuinely free turn and would silently
+            // drag every daily total down. The warning is the signal to add
+            // the model to assets/model-registry.json.
+            warn!(
+                "unknown model {:?} — cost not computed for this turn; add it to assets/model-registry.json",
+                u.model
+            );
+        }
 
         // Persist.
         let row = EventRow {
@@ -146,7 +156,7 @@ impl Aggregator {
             output_tokens: Some(u.output_tokens as i64),
             cache_read_tokens: Some(u.cache_read_tokens as i64),
             cache_write_tokens: Some(u.cache_write_tokens as i64),
-            cost_usd: Some(cost as f64),
+            cost_usd: cost.map(|c| c as f64),
             metadata: u.project.clone(),
         };
         if let Err(e) = self.db.insert_event(&row) {
@@ -165,6 +175,7 @@ impl Aggregator {
             .entry(u.source_id.clone())
             .or_insert_with(|| SourceState::new(u.source_id.clone(), u.kind, u.owner.clone()));
         src.model = u.model.clone();
+        src.model_known = registry.is_known(&u.model);
         src.project = u.project.clone();
         src.owner = u.owner.clone();
         src.input_tokens_today += u.input_tokens;

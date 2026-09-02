@@ -1,3 +1,8 @@
+> **SUPERSEDED — HISTORICAL ONLY. DO NOT USE AS GUIDANCE.**
+> Archived 2026-09-02. Prices, model names and the cache multiplier in this file
+> are from April 2026 and are wrong. The live version of this material is the
+> `token-management` skill on the account. Kept for history only.
+
 # Model selection
 
 Decision tree for choosing between Opus, Sonnet, and Haiku across the Claude 4.x family. Current as of April 2026.

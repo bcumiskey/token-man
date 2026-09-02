@@ -46,17 +46,34 @@ pub fn build_markdown(s: &AppState) -> String {
             SourceStatus::Stale => "stale",
             SourceStatus::Offline => "offline",
         };
+        // An unpriced model gets an explicit marker and no dollar figure —
+        // printing $0.00 for it would read as "this source was free".
+        let model_cell = if src.model_known {
+            src.model.clone()
+        } else {
+            format!("{} (unpriced)", src.model)
+        };
+        let cost_cell = if src.model_known {
+            format!("${:.2}", src.cost_today)
+        } else {
+            "—".to_string()
+        };
         out.push_str(&format!(
-            "| {} | {} | {} | {} | {} | ${:.2} | {} | {} |\n",
+            "| {} | {} | {} | {} | {} | {} | {} | {} |\n",
             src.kind.label(),
-            src.model,
+            model_cell,
             src.project.as_deref().unwrap_or("—"),
             src.context_percent.map(|v| format!("{v:.0}%")).unwrap_or_else(|| "—".into()),
             src.tokens_per_min.map(|v| format!("{v:.0}")).unwrap_or_else(|| "—".into()),
-            src.cost_today,
+            cost_cell,
             src.owner,
             status,
         ));
+    }
+    if s.sources.values().any(|src| !src.model_known) {
+        out.push_str(
+            "\n> One or more sources ran a model missing from the registry. Their spend is excluded, so every cost above is a floor, not a total. Add the model to `assets/model-registry.json`.\n",
+        );
     }
     out.push_str(&format!(
         "\n_registry v{} · {}_\n",

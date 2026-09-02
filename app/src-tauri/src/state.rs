@@ -105,6 +105,11 @@ pub struct SourceState {
     pub session_start: Option<DateTime<Utc>>,
     pub last_activity: DateTime<Utc>,
     pub is_opaque: bool,
+    /// False when this source's model is absent from the model registry. Its
+    /// cost could not be computed and is therefore NOT included in any total.
+    /// Surfaced in the HUD so an unpriced source can never be read as a free
+    /// one — the failure this app exists to catch.
+    pub model_known: bool,
     pub status: SourceStatus,
     // Rolling token accounting.
     pub input_tokens_today: u64,
@@ -142,6 +147,7 @@ impl SourceState {
             session_start: Some(now),
             last_activity: now,
             is_opaque: kind.is_opaque(),
+            model_known: true,
             status: SourceStatus::Active,
             input_tokens_today: 0,
             output_tokens_today: 0,
@@ -314,9 +320,13 @@ impl AppState {
                 cost_today: s.cost_today,
                 cache_hit_rate: s.cache_hit_rate,
                 is_opaque: s.is_opaque,
+                model_known: s.model_known,
                 status: s.status,
             })
             .collect();
+
+        // Any unpriced source means every cost figure below is a floor.
+        let cost_incomplete = sources.iter().any(|s| !s.model_known);
 
         let spectrum = match self.spectrum_window {
             SpectrumWindow::S60 => &self.global.spectrum_60s,
@@ -358,6 +368,7 @@ impl AppState {
                 ctx_worst: self.global.context_percent_worst,
                 five_hour: self.global.five_hour_usage_percent,
                 week: self.global.week_usage_percent,
+                cost_incomplete,
             },
             sources,
             spectrum: SpectrumView {
@@ -462,6 +473,10 @@ pub struct MetricsView {
     #[serde(rename = "fiveHour")]
     pub five_hour: f32,
     pub week: f32,
+    /// True when at least one live source ran a model the registry does not
+    /// price. `cost_today` is then a floor, not a total.
+    #[serde(rename = "costIncomplete")]
+    pub cost_incomplete: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -481,6 +496,8 @@ pub struct SourceView {
     pub cache_hit_rate: Option<f32>,
     #[serde(rename = "isOpaque")]
     pub is_opaque: bool,
+    #[serde(rename = "modelKnown")]
+    pub model_known: bool,
     pub status: SourceStatus,
 }
 

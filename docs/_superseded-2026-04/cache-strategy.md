@@ -1,3 +1,8 @@
+> **SUPERSEDED — HISTORICAL ONLY. DO NOT USE AS GUIDANCE.**
+> Archived 2026-09-02. Prices, model names and the cache multiplier in this file
+> are from April 2026 and are wrong. The live version of this material is the
+> `token-management` skill on the account. Kept for history only.
+
 # Prompt caching strategy
 
 The single highest-ROI API-level optimization. A 20-turn, 100K-context session drops from ~$6 without cache to ~$0.95 with proper cache placement. Claude Code's team treats cache-hit rate as a SEV-worthy metric; if your cache-read tokens aren't dramatically larger than your cache-creation tokens, something is wrong.

@@ -1,3 +1,8 @@
+> **SUPERSEDED — HISTORICAL ONLY. DO NOT USE AS GUIDANCE.**
+> Archived 2026-09-02. Prices, model names and the cache multiplier in this file
+> are from April 2026 and are wrong. The live version of this material is the
+> `token-management` skill on the account. Kept for history only.
+
 # Compaction playbook
 
 Decision tree for deciding among `/clear`, `/compact`, subagent handoff, and memory-tool persistence. The instinct to reach for `/compact` as a default is usually wrong — it breaks the prompt cache, and the summarization itself costs tokens.

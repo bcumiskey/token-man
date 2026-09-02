@@ -1,21 +1,69 @@
 {
-  "version": "4.7",
-  "updated": "2026-04-23",
-  "_comment": "context_window reflects effective subscription context (200k). Extended 1M context requires beta flags not accessible to subscription users.",
+  "version": "5.1",
+  "updated": "2026-09-02",
+  "_comment": "context_window is the documented window for the model. The 4.x entries keep the 204800 figure (200k effective subscription context) they were authored with; the 5-series ships 1M natively. cache_write_multiplier is the 5-minute-TTL rate (1.25x on every current model); the 1-hour TTL is 2.0x across the board and is not represented in this schema. cache_read_multiplier is 0.1x everywhere EXCEPT Fable 5.1 and Mythos 5.1, which read at 0.025x. tokenizer_inflation is 1.0 wherever it has not been measured - only opus-4-7 has a measured value.",
   "models": {
+    "claude-fable-5-1": {
+      "context_window": 1000000,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 10.00,
+      "pricing_output_per_mtok": 50.00,
+      "cache_read_multiplier": 0.025,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-mythos-5-1": {
+      "context_window": 1000000,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 10.00,
+      "pricing_output_per_mtok": 50.00,
+      "cache_read_multiplier": 0.025,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-fable-5": {
+      "context_window": 1000000,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 10.00,
+      "pricing_output_per_mtok": 50.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-mythos-5": {
+      "context_window": 1000000,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 10.00,
+      "pricing_output_per_mtok": 50.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-opus-5": {
+      "context_window": 1000000,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 5.00,
+      "pricing_output_per_mtok": 25.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    },
+    "claude-sonnet-5": {
+      "context_window": 1000000,
+      "tokenizer_inflation": 1.0,
+      "pricing_input_per_mtok": 2.00,
+      "pricing_output_per_mtok": 10.00,
+      "cache_read_multiplier": 0.1,
+      "cache_write_multiplier": 1.25
+    },
     "claude-opus-4-7": {
       "context_window": 204800,
       "tokenizer_inflation": 1.22,
-      "pricing_input_per_mtok": 15.00,
-      "pricing_output_per_mtok": 75.00,
+      "pricing_input_per_mtok": 5.00,
+      "pricing_output_per_mtok": 25.00,
       "cache_read_multiplier": 0.1,
       "cache_write_multiplier": 1.25
     },
     "claude-opus-4-6": {
       "context_window": 204800,
       "tokenizer_inflation": 1.0,
-      "pricing_input_per_mtok": 15.00,
-      "pricing_output_per_mtok": 75.00,
+      "pricing_input_per_mtok": 5.00,
+      "pricing_output_per_mtok": 25.00,
       "cache_read_multiplier": 0.1,
       "cache_write_multiplier": 1.25
     },
