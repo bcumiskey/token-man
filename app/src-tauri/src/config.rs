@@ -123,7 +123,13 @@ impl Default for RegistrySection {
 }
 
 fn default_registry_url() -> String {
-    "https://raw.githubusercontent.com/tokenman/token-man/main/model-registry.json".into()
+    // Points at this repo's own bundled registry on `main`. The previous
+    // default (tokenman/token-man) is not a repo that exists, so
+    // cmd_refresh_registry had always failed with HTTP 404 - the self-update
+    // path was dead from the first commit. This repo is public, so the raw
+    // fetch needs no auth.
+    "https://raw.githubusercontent.com/bcumiskey/token-man/main/app/src-tauri/assets/model-registry.json"
+        .into()
 }
 
 impl Default for Config {
